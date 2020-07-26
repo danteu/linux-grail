@@ -1,0 +1,113 @@
+# SPDX-License-Identifier: GPL-2.0
+
+menu "UML Character Devices"
+
+config STDERR_CONSOLE
+	bool "stderr console"
+	default y
+	help
+	  console driver which dumps all printk messages to stderr.
+
+config NOCONFIG_CHAN
+	bool
+	default !(XTERM_CHAN && TTY_CHAN && PTY_CHAN && PORT_CHAN && NULL_CHAN)
+
+config CON_ZERO_CHAN
+	string "Default main console channel initialization"
+	default "fd:0,fd:1"
+	help
+	  This is the string describing the channel to which the main console
+	  will be attached by default.  This value can be overridden from the
+	  command line.  The default value is "fd:0,fd:1", which attaches the
+	  main console to stdin and stdout.
+	  It is safe to leave this unchanged.
+
+config CON_CHAN
+	string "Default console channel initialization"
+	default "xterm"
+	help
+	  This is the string describing the channel to which all consoles
+	  except the main console will be attached by default.  This value can
+	  be overridden from the command line.  The default value is "xterm",
+	  which brings them up in xterms.
+	  It is safe to leave this unchanged, although you may wish to change
+	  this if you expect the UML that you build to be run in environments
+	  which don't have X or xterm available.
+
+config SSL_CHAN
+	string "Default serial line channel initialization"
+	default "pty"
+	help
+	  This is the string describing the channel to which the serial lines
+	  will be attached by default.  This value can be overridden from the
+	  command line.  The default value is "pty", which attaches them to
+	  traditional pseudo-terminals.
+	  It is safe to leave this unchanged, although you may wish to change
+	  this if you expect the UML that you build to be run in environments
+	  which don't have a set of /dev/pty* devices.
+
+endmenu
+
+menu "UML Network Devices"
+	depends on NET
+
+# UML virtual driver
+config UML_NET
+	bool "Virtual network device"
+	help
+	  While the User-Mode port cannot directly talk to any physical
+	  hardware devices, this choice and the following transport options
+	  provide one or more virtual network devices through which the UML
+	  kernels can talk to each other, the host, and with the host's help,
+	  machines on the outside world.
+
+	  For more information, including explanations of the networking and
+	  sample configurations, see
+	  <http://user-mode-linux.sourceforge.net/old/networking.html>.
+
+	  If you'd like to be able to enable networking in the User-Mode
+	  linux environment, say Y; otherwise say N.  Note that you must
+	  enable at least one of the following transport options to actually
+	  make use of UML networking.
+
+config UML_NET_DAEMON
+	bool "Daemon transport (obsolete)"
+	depends on UML_NET
+	help
+	  This User-Mode Linux network transport allows one or more running
+	  UMLs on a single host to communicate with each other, but not to
+	  the host.
+
+	  To use this form of networking, you'll need to run the UML
+	  networking daemon on the host.
+
+	  For more information, see
+	  <http://user-mode-linux.sourceforge.net/old/networking.html>  That site
+	  has examples of the UML command line to use to enable Daemon
+	  networking.
+
+	  NOTE: THIS TRANSPORT IS DEPRECATED AND WILL BE REMOVED SOON!!! Please
+	  migrate to UML_NET_VECTOR.
+
+	  If unsure, say N.
+
+#config UML_NET_VECTOR
+	#bool "Vector I/O high performance network devices"
+	#depends on UML_NET
+	#select FORBID_STATIC_LINK
+	#help
+	#This User-Mode Linux network driver uses multi-message send
+	#and receive functions. The host running the UML guest must have
+	#a linux kernel version above 3.0 and a libc version > 2.13.
+	#This driver provides tap, raw, gre and l2tpv3 network transports
+	#with up to 4 times higher network throughput than the UML network
+	#drivers.
+
+endmenu
+
+config VIRTIO_UML
+	bool "UML driver for virtio devices"
+	select VIRTIO
+	help
+	  This driver provides support for virtio based paravirtual device
+	  drivers over vhost-user sockets.
